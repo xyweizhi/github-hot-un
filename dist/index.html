@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>githot-未工程化</title>
+  <link rel="stylesheet" href="https://unpkg.com/normalize.css@8.0.1/normalize.css">
+  <link href="./static/css/fontawesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/regular.min.css">
+  <style>
+    div {
+      box-sizing: border-box;
+    }
+
+
+    /* loading */
+    .lds-dual-ring {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+    }
+
+    .lds-dual-ring:after {
+      content: " ";
+      display: block;
+      width: 32px;
+      height: 32px;
+      margin: 4px;
+      border-radius: 50%;
+      border: 6px solid #FFDEAD;
+      border-color: #FFDEAD transparent #FFDEAD transparent;
+      animation: lds-dual-ring 1.2s linear infinite;
+    }
+
+    @keyframes lds-dual-ring {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <script src="https://unpkg.com/react@16.8.6/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@16.8.6/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+  <script src="https://unpkg.com/axios@0.21.1/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/lazysizes@5.3.2/lazysizes.js"></script>
+
+  <script type="text/babel">
+
+    function group(array, subGroupLength) {
+      var index = 0;
+      var newArray = [];
+
+      while (index < array.length) {
+        newArray.push(array.slice(index, index += subGroupLength));
+      }
+
+      return newArray;
+    }
+
+    const parseUrl = () => {
+      const [base, urlParam] = window.location.hash.split('?')
+      const urls = base.replace('#/', '').split(/\//g)
+      if (!urlParam) {
+        return [base, null, urls]
+      }
+      const p = urlParam.split(/&/g).map((str) => {
+        const [name, value] = str.split('=')
+        return { name, value }
+      })
+      return [base, p, urls]
+    }
+
+    // 仅限 url parse
+    const stringify = (arr) => arr.map((v) => `${v.name}=${v.value}`).join('&')
+
+    function appendParamToUrl(name, value) {
+      const url = new URL(window.location.href)
+      const [base, urlParam] = parseUrl()
+      if (!urlParam) {
+        url.hash = `${base}?${name}=${value}`
+        window.location.href = url.href
+        return
+      }
+      const urlParams = urlParam.map((val) => {
+        if (val.name === name) {
+          val.value = value
+        }
+        return val
+      })
+      url.hash = `${base}?${stringify(urlParams)}`
+      window.location.href = url.href
+    }
+
+
+    function Item(props) {
+      const { owner, stargazers_count, forks_count, open_issues_count, name } = props
+      return (
+        <div style={{ width: "25%", padding: "4px" }}>
+          <div style={{ backgroundColor: '#e5e5e5', textAlign: "center", paddingBottom: 4 }}>
+            <div><img className="lazyload" style={{ width: '100%', height: 'auto' }}
+              alt={name}
+              src="data:image/png;base64,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" data-src={owner.avatar_url} /></div>
+            <div style={{ fontSize: 16, color: '#FFA07A' }}>{name}</div>
+            <div style={{ padding: '0 32px', textAlign: 'left' }}>
+              <i className="far fa-star" style={{ color: '#FFD700' }}></i>
+              <span style={{ marginLeft: 8 }}>{(+stargazers_count).toLocaleString()}</span>
+              <span style={{ marginLeft: 8 }}>stars</span>
+            </div>
+            <div style={{ padding: '0 32px', textAlign: 'left' }}>
+              <i className="far fa-share-square" style={{ color: '#40E0D0' }}></i>
+              <span style={{ marginLeft: 8 }}>{(+forks_count).toLocaleString()}</span>
+              <span style={{ marginLeft: 8 }}>forks</span>
+            </div>
+            <div style={{ padding: '0 32px', textAlign: 'left' }}>
+              <i className="far fa-dot-circle" style={{ color: '#FF6347' }}></i>
+              <span style={{ marginLeft: 8 }}>{(+open_issues_count).toLocaleString()}</span>
+              <span style={{ marginLeft: 8 }}>issues</span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+
+    function LoadingMore({ onClick, loading }) {
+      return (
+        <div style={{ textAlign: 'center', cursor: 'pointer', height: 64, lineHeight: '64px' }}>
+          {
+            loading ? (
+              <div key="loading" className="lds-dual-ring"></div>
+            ) : (
+              <span key="loadmore" onClick={onClick}>加载更多</span>
+            )
+          }
+        </div>
+      )
+    }
+
+
+
+    class Content extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {
+          data: [],
+          pageIndex: 1
+        }
+
+        this.handleLoadMoreClick = this.handleLoadMoreClick.bind(this)
+      }
+
+      componentDidMount() {
+        const { url } = this.props
+        this.getGithubData(url)
+      }
+
+      componentDidUpdate(prevProps) {
+        const { url } = this.props
+        if (prevProps.url !== url) {
+          this.getGithubData(url)
+        }
+      }
+
+      getGithubData(url, pageIndex = 1) {
+        const { onLoading } = this.props
+        const { data } = this.state
+        onLoading(true)
+        axios.get(`${url}&page=${pageIndex}`).then(res => {
+          const { items } = res.data
+          if (pageIndex === 1) {
+            this.setState({ data: items, pageIndex })
+            onLoading(false)
+            return
+          }
+          this.setState({ data: data.concat(items), pageIndex })
+          onLoading(false)
+        }).catch(err => {
+          window.alert(err.response ? err.response.data.message : err.message)
+          if (pageIndex === 1) {
+            this.setState({ pageIndex })
+          } else {
+            this.setState({ pageIndex: pageIndex - 1 })
+          }
+          this.setState({ pageIndex })
+          onLoading(false)
+        })
+      }
+
+      handleLoadMoreClick() {
+        const { pageIndex } = this.state
+        const { url } = this.props
+        this.getGithubData(url, pageIndex + 1)
+      }
+
+
+      render() {
+        const { data } = this.state
+        const { loading } = this.props
+
+        if (!data || data.length === 0) return null
+
+
+        const arr = group(data, 4)
+        const length = arr.length
+
+        return (
+          <div key="content">
+            {
+              arr.map((items, index) => {
+                return (
+                  <div key={index} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: `${index + 1 === length && items.length === 2 ? 'space-around' : 'flex-start'}` }}>
+                    {items.map(item => (<Item key={item.node_id} {...item} />))}
+                  </div>
+                )
+              })
+            }
+            <LoadingMore onClick={this.handleLoadMoreClick} loading={loading} />
+          </div>
+        )
+      }
+    }
+
+
+
+
+
+    class App extends React.Component {
+      constructor(props) {
+        super(props)
+
+        this.map = [
+          { language: 'All', url: 'https://api.github.com/search/repositories?q=stars:%3E1&sort=stars&order=desc&type=Repositories&per_page=10' },
+          { language: 'Javascript', url: 'https://api.github.com/search/repositories?q=stars:%3E1+language:javascript&sort=stars&order=desc&type=Repositories&per_page=10' },
+          { language: 'Ruby', url: 'https://api.github.com/search/repositories?q=stars:%3E1+language:ruby&sort=stars&order=desc&type=Repositories&per_page=10' },
+          { language: 'Java', url: 'https://api.github.com/search/repositories?q=stars:%3E1+language:java&sort=stars&order=desc&type=Repositories&per_page=10' },
+          { language: 'CSS', url: 'https://api.github.com/search/repositories?q=stars:%3E1+language:css&sort=stars&order=desc&type=Repositories&per_page=10' },
+        ]
+
+        const [, urlParams] = parseUrl()
+        let language = 'All'
+        let url = 'https://api.github.com/search/repositories?q=stars:%3E1&sort=stars&order=desc&type=Repositories&per_page=10'
+        if (urlParams) {
+          const value = urlParams.find(v => v.name === 'language')
+
+          if (value) {
+            const tar = this.map.find(v => v.language === value.value)
+            if (tar) {
+              language = value.value
+              url = tar.url
+            }
+          }
+        }
+
+        appendParamToUrl('language', language)
+
+        this.state = {
+          url,
+          language,
+          loading: false
+        }
+
+
+        this.handleLoading = this.handleLoading.bind(this)
+
+      }
+
+      handleOnClick(value) {
+        const { loading } = this.state
+        if (loading) return
+        appendParamToUrl('language', value.language)
+        this.setState({ ...value })
+      }
+
+      handleLoading(loading) {
+        this.setState({ loading })
+      }
+
+      render() {
+        const { url, language, loading } = this.state
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '1440px', margin: '0 auto' }}>
+            {loading && (
+              <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 100 }}>正在加载中...</div>
+            )}
+            <div style={{ padding: 8, textAlign: 'center' }}>
+              {this.map.map(val => (<span style={{ marginRight: 8, cursor: 'pointer', color: language === val.language ? (loading ? '#FFC0CB' : '#de325f') : '#000' }} key={val.language} onClick={this.handleOnClick.bind(this, val)} >{val.language}</span>))}
+            </div>
+            {url && (
+              <Content url={url} onLoading={this.handleLoading} loading={loading} />
+            )}
+          </div>
+        )
+      }
+    }
+
+    ReactDOM.render(
+      <App />,
+      document.getElementById('container')
+    )
+  </script>
+</body>
+
+</html>
